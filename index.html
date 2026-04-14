@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f7a55" />
+    <title>Membership Scanner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./icons/icon-192.svg" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">Mobile Ready</p>
+        <h1>QR + Barcode Scanner</h1>
+        <p class="subtitle">
+          Scan membership cards with your phone camera. No app store install required.
+        </p>
+        <button
+          class="btn btn-install"
+          @click="installApp"
+          :disabled="!canInstall"
+          v-if="showInstallUi"
+        >
+          Install App
+        </button>
+      </header>
+
+      <main class="scanner-panel">
+        <div class="status-row">
+          <span class="pill" :class="isScanning ? 'pill-live' : 'pill-idle'">
+            {{ isScanning ? 'Camera Live' : 'Camera Off' }}
+          </span>
+          <p class="hint">Use rear camera for best results.</p>
+        </div>
+
+        <div id="reader" class="reader-box" aria-label="Camera scanner preview"></div>
+
+        <div class="controls">
+          <button class="btn btn-primary" @click="startScanner" :disabled="isScanning">
+            Start Scan
+          </button>
+          <button class="btn btn-secondary" @click="stopScanner" :disabled="!isScanning">
+            Stop
+          </button>
+        </div>
+
+        <p class="message" :class="errorMessage ? 'message-error' : 'message-ok'">
+          {{ errorMessage || statusMessage }}
+        </p>
+
+        <section class="settings">
+          <h2>Submission Settings</h2>
+
+          <label class="field-label" for="endpoint">API Endpoint</label>
+          <input
+            id="endpoint"
+            class="text-input"
+            v-model.trim="apiEndpoint"
+            placeholder="https://example.com/api/checkin"
+            inputmode="url"
+            autocomplete="off"
+          />
+
+          <label class="toggle-row">
+            <input type="checkbox" v-model="autoSubmit" />
+            <span>Auto-submit every successful scan</span>
+          </label>
+
+          <label class="field-label" for="cooldown">Duplicate Cooldown (ms)</label>
+          <input
+            id="cooldown"
+            class="text-input"
+            type="number"
+            min="500"
+            step="100"
+            v-model.number="cooldownMs"
+          />
+        </section>
+      </main>
+
+      <section class="result-panel">
+        <h2>Recent Reads</h2>
+        <p v-if="results.length === 0" class="empty">No scans yet.</p>
+        <ul v-else class="result-list">
+          <li v-for="item in results" :key="item.id">
+            <div>
+              <strong>{{ item.text }}</strong>
+              <span>{{ item.format }}</span>
+              <span :class="['submit-state', 'submit-' + item.submitState]">
+                {{ item.submitMessage }}
+              </span>
+            </div>
+            <time>{{ item.time }}</time>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="./app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./service-worker.js");
+        });
+      }
+    </script>
+  </body>
+</html>
